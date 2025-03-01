@@ -1,0 +1,32 @@
+version: '1.0'
+
+services:
+  app:
+    container_name: 'wanted_app'
+    build:
+      context: .
+    environment:
+      DATABASE_URL: "postgresql+psycopg2://postgres:password@postgres:5432/postgres"
+    command: bash -c "fastapi run app/main.py"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+  postgres:
+    container_name: 'postgres'
+    image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    logging:
+      driver: none
+
+volumes:
+  postgres_data: { }

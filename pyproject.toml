@@ -8,7 +8,11 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pytest (>=8.3.4,<9.0.0)"
+    "pytest (>=8.3.4,<9.0.0)",
+    "fastapi[standard] (>=0.115.10,<0.116.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "sqlalchemy (>=2.0.38,<3.0.0)",
+    "alembic (>=1.14.1,<2.0.0)"
 ]
 
 

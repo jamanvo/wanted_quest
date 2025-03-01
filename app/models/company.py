@@ -7,7 +7,7 @@ from app.database import Base
 class Company(Base):
     __tablename__ = "companies"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
 
 
 class CompanyTag(Base):
@@ -15,15 +15,24 @@ class CompanyTag(Base):
 
     company = relationship("Company", back_populates="items")
 
-    id = Column(Integer, primary_key=True, index=True)
-    Tag = Column(String, index=True)
+    id = Column(Integer, primary_key=True)
+    tag = Column(String)
 
 
 class CompanyLocalizedName(Base):
-    __tablename__ = "company_tags"
+    __tablename__ = "company_localized_names"
 
     company = relationship("Company", back_populates="items")
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String)
-    Tag = Column(String, index=True)
+    language = Column(String)
+
+
+class CompanyNameToken(Base):
+    __tablename__ = "company_name_tokens"
+
+    company = relationship("Company", back_populates="items")
+
+    id = Column(Integer, primary_key=True)
+    tokenized_name = Column(String)
