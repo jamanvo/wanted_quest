@@ -1,12 +1,16 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.schemas.companies import CompanyDetail, CompanyCreateBody
+from app.services.common import get_language
 
 router = APIRouter()
 
 
-@router.get("/{company_name}", response_model=CompanyDetail)
-def get_company(company_name: str):
+@router.get(
+    "/{company_name}",
+    response_model=CompanyDetail,
+)
+def get_company(company_name: str, language: str = Depends(get_language)):
     return
 
 

@@ -1,10 +1,18 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
-from app.schemas.companies import CompanyDetail
+from app.database import get_db
+from app.schemas.companies import CompanyName
+from app.services.common import get_language
+from app.services.company import CompanySearchService
 
 router = APIRouter()
 
 
-@router.get("/", response_model=list[CompanyDetail])
-def autocomplete_company_name(query: str):
-    return
+@router.get(
+    "/",
+    response_model=list[CompanyName],
+)
+def autocomplete_company_name(query: str, db: Session = Depends(get_db), language: str = Depends(get_language)):
+    data = CompanySearchService(db, language).search(query)
+    return data

@@ -40,12 +40,13 @@ with open("scripts/company_tag_sample.csv", newline="") as csvfile:
                     )
                     db.add(token_name)
             if row[f"tag_{language}"]:
-                tag = CompanyTag(
-                    company_id=company.id,
-                    tag=row[f"tag_{language}"],
-                    language=language,
-                )
-                db.add(tag)
+                for tag in row[f"tag_{language}"].split("|"):
+                    new_tag = CompanyTag(
+                        company_id=company.id,
+                        tag=tag,
+                        language=language,
+                    )
+                    db.add(new_tag)
 
         db.commit()
 
