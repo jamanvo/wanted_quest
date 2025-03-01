@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from app.schemas.common import LanguageModel
 
-class SearchCompanyResponse(BaseModel):
-    company_name: str
+
+class TagModel(BaseModel):
+    tag_name: LanguageModel

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api import tags, search, companies
+from app.api import companies, tags, search
 
 app = FastAPI(title="Wanted Quest")
 
