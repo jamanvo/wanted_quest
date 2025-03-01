@@ -88,10 +88,10 @@ class CommonTagCreateService:
 
     def _get_or_create_tag_info(self, tags: list[str]) -> int:
         query = select(TagValue).where(TagValue.value.in_(tags))
-        result = self.db.execute(query).scalar_one_or_none()
+        result = self.db.execute(query).scalars().all()
 
         if result:
-            return result.tag_origin_id
+            return result[0].tag_origin_id
 
         to = TagOrigin()
         self.db.add(to)
