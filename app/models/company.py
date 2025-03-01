@@ -58,6 +58,7 @@ class CompanyTag(Base):
 
     id = Column(Integer, primary_key=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    tag_origin_id = Column(Integer, ForeignKey("tag_origins.id"), nullable=False)
     tag = Column(String)
     language = Column(String)
 
