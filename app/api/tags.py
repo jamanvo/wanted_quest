@@ -7,4 +7,5 @@ router = APIRouter()
 
 @router.get("/", response_model=list[CompanyDetail])
 def search_company_from_tag(query: str):
+    print(11111)
     return

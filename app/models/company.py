@@ -1,5 +1,5 @@
 import sqlalchemy
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -14,11 +14,12 @@ class Company(Base):
 class CompanyLocalizedName(Base):
     __tablename__ = "company_localized_names"
 
-    company = relationship("Company", back_populates="items")
-
     id = Column(Integer, primary_key=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     name = Column(String)
     language = Column(String)
+
+    company = relationship("Company")
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint(
@@ -33,10 +34,11 @@ class CompanyLocalizedName(Base):
 class CompanyNameToken(Base):
     __tablename__ = "company_name_tokens"
 
-    company = relationship("Company", back_populates="items")
-
     id = Column(Integer, primary_key=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     tokenized_name = Column(String)
+
+    company = relationship("Company")
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint(
@@ -50,11 +52,12 @@ class CompanyNameToken(Base):
 class CompanyTag(Base):
     __tablename__ = "company_tags"
 
-    company = relationship("Company", back_populates="items")
-
     id = Column(Integer, primary_key=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     tag = Column(String)
     language = Column(String)
+
+    company = relationship("Company")
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint(

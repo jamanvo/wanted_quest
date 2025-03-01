@@ -83,12 +83,6 @@ def upgrade():
         ["id"],
     )
 
-    op.create_unique_constraint(
-        "unique_company_name_tokens_company_id_name_tokenized_name",
-        "company_name_tokens",
-        ["company_id", "tokenized_name"],
-    )
-
     # company_tags
     op.create_table(
         "company_tags",
@@ -100,6 +94,7 @@ def upgrade():
             nullable=False,
         ),
         sa.Column("tag", sa.String(), nullable=False),
+        sa.Column("language", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.Index("ix_company_tags_tag", "tag"),
     )
@@ -110,6 +105,12 @@ def upgrade():
         "companies",
         ["company_id"],
         ["id"],
+    )
+
+    op.create_unique_constraint(
+        "unique_company_tags_company_id_tag_language",
+        "company_tags",
+        ["company_id", "tag", "language"],
     )
 
 
