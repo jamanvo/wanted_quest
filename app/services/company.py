@@ -1,12 +1,15 @@
 from typing import Sequence
 
 from fastapi import HTTPException, status
-from sqlalchemy import select, distinct
-from sqlalchemy.orm import joinedload
+from sqlalchemy import select, distinct, exists
+from sqlalchemy.orm import joinedload, Session
 
-from app.models.company import CompanyNameToken, CompanyLocalizedName, Company
-from app.schemas.companies import CompanyName, CompanyDetail
-from app.services.common import BaseService
+from app.models.company import CompanyNameToken, CompanyLocalizedName, Company, CompanyTag
+from app.schemas.common import LanguageModel
+from app.schemas.companies import CompanyName, CompanyDetail, CompanyCreateBody
+from app.schemas.tags import TagModel
+from app.services.common import BaseService, CompanyInfoService
+from app.services.tokenizer import TokenizeService
 
 
 class AutoCompleteService(BaseService):
@@ -33,17 +36,17 @@ class AutoCompleteService(BaseService):
 
 
 class CompanySearchService(BaseService):
-    pass
+    def __init__(self, db: Session, language: str):
+        super().__init__(db, language)
+        self._company_info_service = CompanyInfoService
 
-
-class CompanyCRUDService(BaseService):
     def get(self, company_name: str) -> CompanyDetail:
         company = self._get_from_name(company_name)
         if not company:
             raise HTTPException(status.HTTP_404_NOT_FOUND)
 
         company = self._get_from_name(company_name)
-        return self._make_detail(company)
+        return self._company_info_service.make_detail(company, self.language)
 
     def _get_from_name(self, company_name: str) -> Company:
         query = (
@@ -54,15 +57,85 @@ class CompanyCRUDService(BaseService):
         )
         return self.db.execute(query).scalars().first()
 
-    def _make_detail(self, company: Company) -> CompanyDetail:
-        return CompanyDetail(
-            company_name=[n.name for n in company.localized_names if n.language == self.language][0],
-            tags=[t.tag for t in company.tags if t.language == self.language],
-        )
 
+class CompanyCreateService(BaseService):
+    def __init__(self, db: Session, language: str):
+        super().__init__(db, language)
+        self._company_info_service = CompanyInfoService
+        self._tokenize_service = TokenizeService
 
-class CompanyLocalizeNameService:
-    pass
+    def create(self, body: CompanyCreateBody):
+        print(1)
+        if self._check_duplicate(body.company_name):
+            print(2)
+            raise HTTPException(status.HTTP_400_BAD_REQUEST)
+
+        # create company
+        company = self._create_company()
+        print(3, company)
+        # create name
+        self._create_names(company.id, body.company_name)
+        print(4)
+        # create tag
+        self._create_tags(company.id, body.tags)
+        print(5)
+
+        self.db.commit()
+        print(6)
+
+        return self._company_info_service.make_detail(company, self.language)
+
+    def _check_duplicate(self, company_names: LanguageModel) -> bool:
+        query = None
+        for k, v in company_names.model_dump().items():
+            if not v:
+                continue
+
+            query = select(
+                exists().where(
+                    CompanyLocalizedName.name == v,
+                    CompanyLocalizedName.language == k,
+                )
+            )
+            break
+
+        if query is None:
+            return True
+
+        print(query)
+        print(self.db.execute(query).scalar())
+        return self.db.execute(query).scalar()
+
+    def _create_company(self) -> Company:
+        company = Company()
+        self.db.add(company)
+        self.db.flush()
+
+        return company
+
+    def _create_names(self, company_id: int, company_names: LanguageModel) -> None:
+        for k, v in company_names.model_dump().items():
+            if not v:
+                continue
+
+            name = CompanyLocalizedName(company_id=company_id, name=v, language=k)
+            self.db.add(name)
+
+            # tokenize
+            for t_name in self._tokenize_service.tokenize_name(v):
+                token_name = CompanyNameToken(company_id=company_id, tokenized_name=t_name)
+                self.db.add(token_name)
+
+    def _create_tags(self, company_id: int, tags: list[TagModel]) -> None:
+        for tag in tags:
+            tag_names = tag.tag_name
+
+            for k, v in tag_names.model_dump().items():
+                if not v:
+                    continue
+
+                t = CompanyTag(company_id=company_id, tag=v, language=k)
+                self.db.add(t)
 
 
 class CompanyTagService:

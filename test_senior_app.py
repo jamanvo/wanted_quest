@@ -91,6 +91,7 @@ def test_new_company(api):
     )
 
     company = resp.json()
+    print(33333, company)
     assert company == {
         "company_name": "LINE FRESH",
         "tags": [
