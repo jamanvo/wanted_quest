@@ -10,7 +10,9 @@ class Company(Base):
 
     id = Column(Integer, primary_key=True)
 
-    tags = relationship("CompanyTag", back_populates="company")
+    tags = relationship("CompanyTag", back_populates="company", order_by="CompanyTag.id")
+    localized_names = relationship("CompanyLocalizedName", back_populates="company")
+    name_tokens = relationship("CompanyNameToken", back_populates="company")
 
 
 class CompanyLocalizedName(Base):
@@ -21,7 +23,7 @@ class CompanyLocalizedName(Base):
     name = Column(String)
     language = Column(String)
 
-    company = relationship("Company")
+    company = relationship("Company", back_populates="localized_names")
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint(
@@ -40,7 +42,7 @@ class CompanyNameToken(Base):
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     tokenized_name = Column(String)
 
-    company = relationship("Company")
+    company = relationship("Company", back_populates="name_tokens")
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint(

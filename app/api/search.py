@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.companies import CompanyName
 from app.services.common import get_language
-from app.services.company import CompanySearchService
+from app.services.company import AutoCompleteService
 
 router = APIRouter()
 
@@ -14,5 +14,5 @@ router = APIRouter()
     response_model=list[CompanyName],
 )
 def autocomplete_company_name(query: str, db: Session = Depends(get_db), language: str = Depends(get_language)):
-    data = CompanySearchService(db, language).search(query)
+    data = AutoCompleteService(db, language).search(query)
     return data

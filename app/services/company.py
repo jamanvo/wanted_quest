@@ -1,18 +1,15 @@
-import re
 from typing import Sequence
 
+from fastapi import HTTPException, status
 from sqlalchemy import select, distinct
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 
-from app.models.company import CompanyNameToken, CompanyLocalizedName
-from app.schemas.companies import CompanyName
+from app.models.company import CompanyNameToken, CompanyLocalizedName, Company
+from app.schemas.companies import CompanyName, CompanyDetail
+from app.services.common import BaseService
 
 
-class CompanySearchService:
-    def __init__(self, db: Session, language: str):
-        self.db = db
-        self.language = language
-
+class AutoCompleteService(BaseService):
     def search(self, keyword: str) -> list[CompanyName]:
         company_ids = self._get_company_ids(keyword)
         company_names = self._get_company_names(company_ids)
@@ -35,27 +32,33 @@ class CompanySearchService:
         return self.db.execute(query).scalars().all()
 
 
-class CompanyCRUDService:
+class CompanySearchService(BaseService):
     pass
 
 
-class TokenizeService:
-    @staticmethod
-    def tokenize_name(name: str) -> list[str]:
-        target_name = re.sub(r"\s|\(.*\)|\(|\)|주식회사|inc\.", "", name.lower())
-        max_length = len(target_name)
+class CompanyCRUDService(BaseService):
+    def get(self, company_name: str) -> CompanyDetail:
+        company = self._get_from_name(company_name)
+        if not company:
+            raise HTTPException(status.HTTP_404_NOT_FOUND)
 
-        result = []
-        for i in range(2, max_length + 1):
-            for j in range(len(target_name)):
-                token = target_name[j : j + i]
+        company = self._get_from_name(company_name)
+        return self._make_detail(company)
 
-                if len(token) == i:
-                    result.append(token)
-                elif len(token) < i:
-                    break
+    def _get_from_name(self, company_name: str) -> Company:
+        query = (
+            select(Company)
+            .options(joinedload(Company.localized_names), joinedload(Company.tags))
+            .join(CompanyLocalizedName)
+            .where(CompanyLocalizedName.name == company_name)
+        )
+        return self.db.execute(query).scalars().first()
 
-        return result
+    def _make_detail(self, company: Company) -> CompanyDetail:
+        return CompanyDetail(
+            company_name=[n.name for n in company.localized_names if n.language == self.language][0],
+            tags=[t.tag for t in company.tags if t.language == self.language],
+        )
 
 
 class CompanyLocalizeNameService:

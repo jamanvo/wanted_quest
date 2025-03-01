@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from app.database import get_db
 from app.schemas.companies import CompanyDetail, CompanyCreateBody
 from app.services.common import get_language
+from app.services.company import CompanyCRUDService
 
 router = APIRouter()
 
@@ -10,8 +13,9 @@ router = APIRouter()
     "/{company_name}",
     response_model=CompanyDetail,
 )
-def get_company(company_name: str, language: str = Depends(get_language)):
-    return
+def get_company(company_name: str, db: Session = Depends(get_db), language: str = Depends(get_language)):
+    data = CompanyCRUDService(db, language).get(company_name)
+    return data
 
 
 @router.post("/", response_model=CompanyDetail)

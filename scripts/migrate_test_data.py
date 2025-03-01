@@ -11,7 +11,7 @@ from app.models.company import (
     CompanyTag,
     CompanyNameToken,
 )
-from app.services.company import TokenizeService
+from app.services.tokenizer import TokenizeService
 
 print("start migrate")
 
